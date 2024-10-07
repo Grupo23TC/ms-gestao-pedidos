@@ -45,22 +45,7 @@ public class PedidoServiceImpl implements PedidoService {
   @Override
   @Transactional
   public PedidoResponse cadastrarPedido(CadastrarPedidoRequest pedidoRequest) {
-    Pedido pedido = new Pedido();
-    pedido.setUsuarioId(pedidoRequest.usuarioId());
-    pedido.setStatus(StatusPedido.CRIADO);
-    double valorTotal = pedidoRequest
-        .itensPedido()
-        .stream()
-        .mapToDouble(item -> item.preco() * item.quantidade())
-        .sum();
-
-    pedido.setValorTotal(valorTotal);
-
-    for(ItemPedidoDto item : pedidoRequest.itensPedido()) {
-      ItemPedido itemPedido = new ItemPedido(item.produtoId(), item.quantidade(), item.preco());
-      itemPedido.setPedido(pedido);
-      pedido.getItensPedido().add(itemPedido);
-    }
+    Pedido pedido = PedidoMapper.toPedido(pedidoRequest);
 
     return PedidoMapper.toPedidoResponse(pedidoRepository.save(pedido));
   }
