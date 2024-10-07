@@ -13,6 +13,7 @@ import com.fiap.tc.ms.gestao_pedidos.model.Pedido;
 import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPedido;
 import com.fiap.tc.ms.gestao_pedidos.repository.ItemPedidoRepository;
 import com.fiap.tc.ms.gestao_pedidos.repository.PedidoRepository;
+import com.fiap.tc.ms.gestao_pedidos.exceptions.PedidoNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,9 +38,7 @@ public class PedidoServiceImpl implements PedidoService {
   @Override
   @Transactional(readOnly = true)
   public PedidoResponse buscarPedidosPorId(Long id) {
-    Pedido pedido = pedidoRepository.findById(id).orElseThrow(
-        () -> new IllegalArgumentException("Pedido com id: " + id + " não encontrado")
-    );
+    Pedido pedido = buscarPedidoPorIdOuLancarExcecao(id);
     return PedidoMapper.toPedidoResponse(pedido);
   }
 
@@ -69,18 +68,10 @@ public class PedidoServiceImpl implements PedidoService {
   @Override
   @Transactional
   public PedidoDeletadoResponse excluirPedido(Long id) {
-    try {
-      pedidoRepository.findById(id).orElseThrow(
-          () -> new IllegalArgumentException("Pedido com id: " + id + " não encontrado")
-      );
+    buscarPedidoPorIdOuLancarExcecao(id);
 
-      pedidoRepository.deleteById(id);
-      return new PedidoDeletadoResponse(true);
-    } catch (Exception e) {
-      return new PedidoDeletadoResponse(false);
-    }
-
-
+    pedidoRepository.deleteById(id);
+    return new PedidoDeletadoResponse(true);
   }
 
   @Override
@@ -88,9 +79,7 @@ public class PedidoServiceImpl implements PedidoService {
   public PedidoStatusAtualizadoResponse atualizarStatusPedido(
       Long id, AtualizarStatusPedidoRequest statusPedidoRequest
   ) {
-    Pedido pedido = pedidoRepository.findById(id).orElseThrow(
-        () -> new IllegalArgumentException("Pedido com id: " + id + " não encontrado")
-    );
+    Pedido pedido = buscarPedidoPorIdOuLancarExcecao(id);
     pedido.setStatus(statusPedidoRequest.novoStatus());
     return PedidoMapper.toPedidoStatusAtualizado(pedido);
   }
@@ -107,4 +96,9 @@ public class PedidoServiceImpl implements PedidoService {
     return pedidoRepository.findByStatus(status, pageable).map(PedidoMapper::toPedidoResponse);
   }
 
+  private Pedido buscarPedidoPorIdOuLancarExcecao(Long id) {
+    return pedidoRepository.findById(id).orElseThrow(
+        () -> new PedidoNotFoundException("Pedido com id: " + id + " não encontrado")
+    );
+  }
 }
