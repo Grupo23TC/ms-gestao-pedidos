@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  app:
+    image: 'ms-gestao-pedidos:dev'
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ms-gestao-pedidos
+    ports:
+      - "8081:8080"
