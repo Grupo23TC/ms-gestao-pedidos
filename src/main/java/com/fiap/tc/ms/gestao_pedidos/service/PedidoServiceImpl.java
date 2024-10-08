@@ -7,6 +7,8 @@ import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoDeletadoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoPaginadoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoStatusAtualizadoResponse;
+import com.fiap.tc.ms.gestao_pedidos.exceptions.ItemNotFoundException;
+import com.fiap.tc.ms.gestao_pedidos.exceptions.QuantidadeErradaException;
 import com.fiap.tc.ms.gestao_pedidos.mapper.PedidoMapper;
 import com.fiap.tc.ms.gestao_pedidos.model.ItemPedido;
 import com.fiap.tc.ms.gestao_pedidos.model.Pedido;
@@ -110,7 +112,7 @@ public class PedidoServiceImpl implements PedidoService {
     ItemPedido itemExistente = buscarItemNoPedido(pedidoBuscado, item.produtoId());
 
     if(itemExistente == null) {
-      throw new IllegalArgumentException("Item não encontrado dentro do pedido.");
+      throw new ItemNotFoundException("Item não encontrado dentro do pedido.");
     }
 
     if(item.quantidade() > 0) {
@@ -132,7 +134,7 @@ public class PedidoServiceImpl implements PedidoService {
 
   private void validarQuantidadeAdicionarItem(ItemPedidoDto itemDto) {
     if (itemDto.quantidade() <= 0) {
-      throw new IllegalArgumentException("A quantidade do item deve ser superior a zero");
+      throw new QuantidadeErradaException("A quantidade do item deve ser superior a zero");
     }
   }
 
@@ -145,7 +147,7 @@ public class PedidoServiceImpl implements PedidoService {
 
   private void atualizarAdicaoItemPedido(ItemPedido itemExistente, ItemPedidoDto itemDto) {
     if (itemDto.quantidade() <= itemExistente.getQuantidade()) {
-      throw new IllegalArgumentException("A quantidade do item deve ser superior à quantidade do pedido original");
+      throw new QuantidadeErradaException("A quantidade do item deve ser superior à quantidade do pedido original");
     }
     itemExistente.setQuantidade(itemDto.quantidade());
     itemExistente.setPreco(itemDto.preco());
@@ -158,7 +160,7 @@ public class PedidoServiceImpl implements PedidoService {
 
   private void removerItemPedido(ItemPedido itemPedido, ItemPedidoDto itemDto) {
     if(itemDto.quantidade() > itemPedido.getQuantidade()) {
-      throw new IllegalArgumentException("A quantidade do item deve ser inferior à quantidade do pedido original");
+      throw new QuantidadeErradaException("A quantidade do item deve ser inferior à quantidade do pedido original");
     }
     itemPedido.setQuantidade(itemDto.quantidade());
     itemPedido.setPreco(itemDto.preco());

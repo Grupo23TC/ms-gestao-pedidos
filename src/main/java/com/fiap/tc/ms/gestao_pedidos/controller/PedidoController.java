@@ -9,6 +9,7 @@ import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoStatusAtualizadoResponse;
 import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPedido;
 import com.fiap.tc.ms.gestao_pedidos.service.PedidoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,7 +35,7 @@ public class PedidoController {
   }
 
   @PostMapping
-  public ResponseEntity<PedidoResponse> salvarPedido(@RequestBody CadastrarPedidoRequest pedido) {
+  public ResponseEntity<PedidoResponse> salvarPedido(@Valid @RequestBody CadastrarPedidoRequest pedido) {
     PedidoResponse pedidoSalvo = pedidoService.cadastrarPedido(pedido);
     URI uri = ServletUriComponentsBuilder
         .fromCurrentRequest()
@@ -61,7 +62,7 @@ public class PedidoController {
   @PutMapping("/adicionar-item/{id}")
   public ResponseEntity<PedidoResponse> adicionarItemPedido(
       @PathVariable Long id,
-      @RequestBody ItemPedidoDto item
+      @Valid @RequestBody ItemPedidoDto item
   ) {
     return ResponseEntity.ok(pedidoService.adicionarItem(id, item));
   }
@@ -69,7 +70,7 @@ public class PedidoController {
   @PutMapping("/remover-item/{id}")
   public ResponseEntity<PedidoResponse> removerItemPedido(
       @PathVariable Long id,
-      @RequestBody ItemPedidoDto item
+      @Valid @RequestBody ItemPedidoDto item
   ) {
     return ResponseEntity.ok(pedidoService.removerItem(id, item));
   }
