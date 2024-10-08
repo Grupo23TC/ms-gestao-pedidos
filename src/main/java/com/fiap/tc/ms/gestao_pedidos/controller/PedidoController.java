@@ -1,5 +1,6 @@
 package com.fiap.tc.ms.gestao_pedidos.controller;
 
+import com.fiap.tc.ms.gestao_pedidos.dto.ItemPedidoDto;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.AtualizarStatusPedidoRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.CadastrarPedidoRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoDeletadoResponse;
@@ -55,6 +56,14 @@ public class PedidoController {
       @RequestBody AtualizarStatusPedidoRequest status
   ) {
     return ResponseEntity.ok(pedidoService.atualizarStatusPedido(id, status));
+  }
+
+  @PutMapping("/adicionar-item/{id}")
+  public ResponseEntity<PedidoResponse> adicionarItemPedido(
+      @PathVariable Long id,
+      @RequestBody ItemPedidoDto item
+  ) {
+    return ResponseEntity.ok(pedidoService.adicionarItem(id, item));
   }
 
   @GetMapping("/status")

@@ -1,5 +1,6 @@
 package com.fiap.tc.ms.gestao_pedidos.service;
 
+import com.fiap.tc.ms.gestao_pedidos.dto.ItemPedidoDto;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.AtualizarStatusPedidoRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.CadastrarPedidoRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoDeletadoResponse;
@@ -27,4 +28,6 @@ public interface PedidoService {
   PedidoStatusAtualizadoResponse atualizarStatusPedido(Long id, AtualizarStatusPedidoRequest status);
 
   Page<PedidoResponse> listarPorStatus(StatusPedido status, Pageable pageable);
+
+  PedidoResponse adicionarItem(Long id, ItemPedidoDto item);
 }

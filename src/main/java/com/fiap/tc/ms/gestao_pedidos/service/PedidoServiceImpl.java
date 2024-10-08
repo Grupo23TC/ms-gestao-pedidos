@@ -14,6 +14,7 @@ import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPedido;
 import com.fiap.tc.ms.gestao_pedidos.repository.ItemPedidoRepository;
 import com.fiap.tc.ms.gestao_pedidos.repository.PedidoRepository;
 import com.fiap.tc.ms.gestao_pedidos.exceptions.PedidoNotFoundException;
+import com.fiap.tc.ms.gestao_pedidos.utils.MatematicaUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -81,9 +82,60 @@ public class PedidoServiceImpl implements PedidoService {
     return pedidoRepository.findByStatus(status, pageable).map(PedidoMapper::toPedidoResponse);
   }
 
+  @Override
+  @Transactional
+  public PedidoResponse adicionarItem(Long id, ItemPedidoDto item) {
+    Pedido pedidoBuscado = buscarPedidoPorIdOuLancarExcecao(id);
+
+    validarQuantidadeItem(item);
+
+    ItemPedido itemExistente = buscarItemNoPedido(pedidoBuscado, item.produtoId());
+
+    if(itemExistente != null) {
+      atualizarItemPedido(itemExistente, item);
+    } else {
+      adicionarNovoItem(pedidoBuscado, item);
+    }
+
+    atualizarValorTotalPedido(pedidoBuscado);
+
+    return PedidoMapper.toPedidoResponse(pedidoRepository.save(pedidoBuscado));
+  }
+
   private Pedido buscarPedidoPorIdOuLancarExcecao(Long id) {
     return pedidoRepository.findById(id).orElseThrow(
         () -> new PedidoNotFoundException("Pedido com id: " + id + " não encontrado")
     );
+  }
+
+  private void validarQuantidadeItem(ItemPedidoDto itemDto) {
+    if (itemDto.quantidade() <= 0) {
+      throw new IllegalArgumentException("A quantidade do item deve ser superior a zero");
+    }
+  }
+
+  private ItemPedido buscarItemNoPedido(Pedido pedido, Long produtoId) {
+    return pedido.getItensPedido().stream()
+        .filter(item -> item.getProdutoId().equals(produtoId))
+        .findFirst()
+        .orElse(null);
+  }
+
+  private void atualizarItemPedido(ItemPedido itemExistente, ItemPedidoDto itemDto) {
+    if (itemDto.quantidade() <= itemExistente.getQuantidade()) {
+      throw new IllegalArgumentException("A quantidade do item deve ser superior à quantidade do pedido original");
+    }
+    itemExistente.setQuantidade(itemDto.quantidade());
+    itemExistente.setPreco(itemDto.preco());
+  }
+
+  private void adicionarNovoItem(Pedido pedido, ItemPedidoDto itemDto) {
+    ItemPedido novoItem = new ItemPedido(itemDto.produtoId(), itemDto.quantidade(), itemDto.preco());
+    pedido.getItensPedido().add(novoItem);
+  }
+
+  private void atualizarValorTotalPedido(Pedido pedido) {
+    double novoValorTotal = MatematicaUtil.calcularValorTotal(pedido.getItensPedido());
+    pedido.setValorTotal(novoValorTotal);
   }
 }

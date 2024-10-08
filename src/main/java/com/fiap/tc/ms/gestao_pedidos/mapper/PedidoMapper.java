@@ -8,6 +8,7 @@ import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoStatusAtualizadoResponse
 import com.fiap.tc.ms.gestao_pedidos.model.ItemPedido;
 import com.fiap.tc.ms.gestao_pedidos.model.Pedido;
 import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPedido;
+import com.fiap.tc.ms.gestao_pedidos.utils.MatematicaUtil;
 
 public class PedidoMapper {
   public static PedidoPaginadoResponse toPedidoPaginado(Pedido pedido) {
@@ -40,11 +41,7 @@ public class PedidoMapper {
     Pedido pedido = new Pedido();
     pedido.setUsuarioId(request.usuarioId());
     pedido.setStatus(StatusPedido.CRIADO);
-    double valorTotal = request
-        .itensPedido()
-        .stream()
-        .mapToDouble(item -> item.preco() * item.quantidade())
-        .sum();
+    double valorTotal = MatematicaUtil.calcularValorTotalDto(request.itensPedido());
 
     pedido.setValorTotal(valorTotal);
 
