@@ -66,6 +66,14 @@ public class PedidoController {
     return ResponseEntity.ok(pedidoService.adicionarItem(id, item));
   }
 
+  @PutMapping("/remover-item/{id}")
+  public ResponseEntity<PedidoResponse> removerItemPedido(
+      @PathVariable Long id,
+      @RequestBody ItemPedidoDto item
+  ) {
+    return ResponseEntity.ok(pedidoService.removerItem(id, item));
+  }
+
   @GetMapping("/status")
   public ResponseEntity<Page<PedidoResponse>> listarStatusPedido(
       @RequestParam("status") String status,

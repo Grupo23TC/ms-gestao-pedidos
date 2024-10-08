@@ -87,14 +87,36 @@ public class PedidoServiceImpl implements PedidoService {
   public PedidoResponse adicionarItem(Long id, ItemPedidoDto item) {
     Pedido pedidoBuscado = buscarPedidoPorIdOuLancarExcecao(id);
 
-    validarQuantidadeItem(item);
+    validarQuantidadeAdicionarItem(item);
 
     ItemPedido itemExistente = buscarItemNoPedido(pedidoBuscado, item.produtoId());
 
     if(itemExistente != null) {
-      atualizarItemPedido(itemExistente, item);
+      atualizarAdicaoItemPedido(itemExistente, item);
     } else {
       adicionarNovoItem(pedidoBuscado, item);
+    }
+
+    atualizarValorTotalPedido(pedidoBuscado);
+
+    return PedidoMapper.toPedidoResponse(pedidoRepository.save(pedidoBuscado));
+  }
+
+  @Override
+  @Transactional
+  public PedidoResponse removerItem(Long id, ItemPedidoDto item) {
+    Pedido pedidoBuscado = buscarPedidoPorIdOuLancarExcecao(id);
+
+    ItemPedido itemExistente = buscarItemNoPedido(pedidoBuscado, item.produtoId());
+
+    if(itemExistente == null) {
+      throw new IllegalArgumentException("Item não encontrado dentro do pedido.");
+    }
+
+    if(item.quantidade() > 0) {
+      removerItemPedido(itemExistente, item);
+    } else {
+      excluirItemPedido(pedidoBuscado, itemExistente);
     }
 
     atualizarValorTotalPedido(pedidoBuscado);
@@ -108,7 +130,7 @@ public class PedidoServiceImpl implements PedidoService {
     );
   }
 
-  private void validarQuantidadeItem(ItemPedidoDto itemDto) {
+  private void validarQuantidadeAdicionarItem(ItemPedidoDto itemDto) {
     if (itemDto.quantidade() <= 0) {
       throw new IllegalArgumentException("A quantidade do item deve ser superior a zero");
     }
@@ -121,7 +143,7 @@ public class PedidoServiceImpl implements PedidoService {
         .orElse(null);
   }
 
-  private void atualizarItemPedido(ItemPedido itemExistente, ItemPedidoDto itemDto) {
+  private void atualizarAdicaoItemPedido(ItemPedido itemExistente, ItemPedidoDto itemDto) {
     if (itemDto.quantidade() <= itemExistente.getQuantidade()) {
       throw new IllegalArgumentException("A quantidade do item deve ser superior à quantidade do pedido original");
     }
@@ -132,6 +154,18 @@ public class PedidoServiceImpl implements PedidoService {
   private void adicionarNovoItem(Pedido pedido, ItemPedidoDto itemDto) {
     ItemPedido novoItem = new ItemPedido(itemDto.produtoId(), itemDto.quantidade(), itemDto.preco());
     pedido.getItensPedido().add(novoItem);
+  }
+
+  private void removerItemPedido(ItemPedido itemPedido, ItemPedidoDto itemDto) {
+    if(itemDto.quantidade() > itemPedido.getQuantidade()) {
+      throw new IllegalArgumentException("A quantidade do item deve ser inferior à quantidade do pedido original");
+    }
+    itemPedido.setQuantidade(itemDto.quantidade());
+    itemPedido.setPreco(itemDto.preco());
+  }
+
+  private void excluirItemPedido(Pedido pedido, ItemPedido itemExistente) {
+    pedido.getItensPedido().remove(itemExistente);
   }
 
   private void atualizarValorTotalPedido(Pedido pedido) {

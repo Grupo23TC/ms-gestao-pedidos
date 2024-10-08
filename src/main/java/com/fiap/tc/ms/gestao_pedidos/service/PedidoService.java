@@ -30,4 +30,6 @@ public interface PedidoService {
   Page<PedidoResponse> listarPorStatus(StatusPedido status, Pageable pageable);
 
   PedidoResponse adicionarItem(Long id, ItemPedidoDto item);
+
+  PedidoResponse removerItem(Long id, ItemPedidoDto item);
 }
