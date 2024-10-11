@@ -1,5 +1,6 @@
 package com.fiap.tc.ms.gestao_pedidos.controller;
 
+import com.fiap.tc.ms.gestao_pedidos.dto.ItemPedidoDto;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.AtualizarStatusPedidoRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.CadastrarPedidoRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoDeletadoResponse;
@@ -8,6 +9,7 @@ import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoStatusAtualizadoResponse;
 import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPedido;
 import com.fiap.tc.ms.gestao_pedidos.service.PedidoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +35,7 @@ public class PedidoController {
   }
 
   @PostMapping
-  public ResponseEntity<PedidoResponse> salvarPedido(@RequestBody CadastrarPedidoRequest pedido) {
+  public ResponseEntity<PedidoResponse> salvarPedido(@Valid @RequestBody CadastrarPedidoRequest pedido) {
     PedidoResponse pedidoSalvo = pedidoService.cadastrarPedido(pedido);
     URI uri = ServletUriComponentsBuilder
         .fromCurrentRequest()
@@ -55,6 +57,22 @@ public class PedidoController {
       @RequestBody AtualizarStatusPedidoRequest status
   ) {
     return ResponseEntity.ok(pedidoService.atualizarStatusPedido(id, status));
+  }
+
+  @PutMapping("/adicionar-item/{id}")
+  public ResponseEntity<PedidoResponse> adicionarItemPedido(
+      @PathVariable Long id,
+      @Valid @RequestBody ItemPedidoDto item
+  ) {
+    return ResponseEntity.ok(pedidoService.adicionarItem(id, item));
+  }
+
+  @PutMapping("/remover-item/{id}")
+  public ResponseEntity<PedidoResponse> removerItemPedido(
+      @PathVariable Long id,
+      @Valid @RequestBody ItemPedidoDto item
+  ) {
+    return ResponseEntity.ok(pedidoService.removerItem(id, item));
   }
 
   @GetMapping("/status")
