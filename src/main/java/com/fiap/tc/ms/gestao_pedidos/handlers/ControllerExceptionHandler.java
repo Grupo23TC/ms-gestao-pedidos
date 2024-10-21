@@ -62,6 +62,22 @@ public class ControllerExceptionHandler {
     return ResponseEntity.status(status).body(erroCustomizado);
   }
 
+  @ExceptionHandler(StatusPedidoInvalidoException.class)
+  public ResponseEntity<ErroCustomizado> handleStatusPedidoInvalidoException(
+      MethodArgumentNotValidException ex,
+      HttpServletRequest request
+  ) {
+    HttpStatus status  = HttpStatus.UNPROCESSABLE_ENTITY;
+    ErroCustomizado erro = new ErroCustomizado(
+        ex.getMessage(),
+        Instant.now(),
+        request.getRequestURI(),
+        status.value()
+    );
+
+    return ResponseEntity.status(status).body(erro);
+  }
+
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErroCustomizado> handleMethodArgumentNotValidException(
       MethodArgumentNotValidException ex,
