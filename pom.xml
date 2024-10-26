@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.fiap.tc.ms</groupId>
-	<artifactId>gestao-pedidos</artifactId>
+	<artifactId>gestao-clientes</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>gestao-pedidos</name>
 	<description>Gestão de pedidos </description>
