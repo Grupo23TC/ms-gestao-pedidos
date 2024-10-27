@@ -49,10 +49,20 @@ public class ClienteServiceImpl implements ClienteService {
     return new ClienteDeletadoResponse(true);
   }
 
-  @Override
   public ClienteResponse atualizarCliente(Long id, AtualizarClienteRequest clienteAtualizado) {
-  }
+    Cliente cliente = clienteRepository.findById(id)
+            .orElseThrow(() -> new ClienteNotFoundException("Cliente com id: " + id + " não encontrado"));
 
+    cliente.setNome(clienteAtualizado.getNome());
+    cliente.setIdade(clienteAtualizado.getIdade());
+    cliente.setCpf(clienteAtualizado.getCpf());
+    cliente.setEndereco(clienteAtualizado.getEndereco());
+    cliente.setCep(clienteAtualizado.getCep());
+
+    Cliente clienteSalvo = clienteRepository.save(cliente);
+
+    return ClienteMapper.toClienteResponse(clienteSalvo);
+  }
   @Transactional(readOnly = true)
   public List<ClienteResponse> buscarClientesPorCep(String cep) {
     return clienteRepository.findByCep(cep).stream().map(ClienteMapper::toClienteResponse).toList();

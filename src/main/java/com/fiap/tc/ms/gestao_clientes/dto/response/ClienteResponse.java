@@ -1,10 +1,6 @@
 package com.fiap.tc.ms.gestao_clientes.dto.response;
 
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
 public record ClienteResponse(
         Long usuarioId,
         String nome,

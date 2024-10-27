@@ -11,7 +11,6 @@ import java.util.List;
 @Repository
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
-    // Busca todos os clientes por CEP
     List<Cliente> findByCep(String cep);
 
 }
