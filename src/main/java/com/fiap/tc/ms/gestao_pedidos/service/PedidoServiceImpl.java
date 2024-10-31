@@ -1,14 +1,14 @@
 package com.fiap.tc.ms.gestao_pedidos.service;
 
 import com.fiap.tc.ms.gestao_pedidos.dto.ItemPedidoDto;
+import com.fiap.tc.ms.gestao_pedidos.dto.request.AtualizarRastreioRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.AtualizarStatusPedidoRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.CadastrarPedidoRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoDeletadoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoPaginadoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoStatusAtualizadoResponse;
-import com.fiap.tc.ms.gestao_pedidos.exceptions.ItemNotFoundException;
-import com.fiap.tc.ms.gestao_pedidos.exceptions.QuantidadeErradaException;
+import com.fiap.tc.ms.gestao_pedidos.exceptions.StatusPedidoInvalidoException;
 import com.fiap.tc.ms.gestao_pedidos.mapper.PedidoMapper;
 import com.fiap.tc.ms.gestao_pedidos.model.ItemPedido;
 import com.fiap.tc.ms.gestao_pedidos.model.Pedido;
@@ -86,17 +86,24 @@ public class PedidoServiceImpl implements PedidoService {
 
   @Override
   @Transactional
-  public PedidoResponse adicionarItem(Long id, ItemPedidoDto item) {
+  public PedidoResponse atualizarItem(Long id, ItemPedidoDto itemPedidoRequest) {
     Pedido pedidoBuscado = buscarPedidoPorIdOuLancarExcecao(id);
 
-    validarQuantidadeAdicionarItem(item);
+    if(
+        !pedidoBuscado.getStatus().equals(StatusPedido.CRIADO)
+        && !pedidoBuscado.getStatus().equals(StatusPedido.PROCESSANDO)
+    ) {
+      throw new StatusPedidoInvalidoException("O pedido não pode mais ser editado ");
+    }
 
-    ItemPedido itemExistente = buscarItemNoPedido(pedidoBuscado, item.produtoId());
+    ItemPedido item = buscarItemNoPedido(pedidoBuscado, itemPedidoRequest.produtoId());
 
-    if(itemExistente != null) {
-      atualizarAdicaoItemPedido(itemExistente, item);
+    if(item != null && itemPedidoRequest.quantidade() != 0) {
+      atualizarItemPedido(item, itemPedidoRequest);
+    } else if(item != null) {
+      excluirItemPedido(pedidoBuscado, item);
     } else {
-      adicionarNovoItem(pedidoBuscado, item);
+      adicionarNovoItem(pedidoBuscado, itemPedidoRequest);
     }
 
     atualizarValorTotalPedido(pedidoBuscado);
@@ -106,36 +113,17 @@ public class PedidoServiceImpl implements PedidoService {
 
   @Override
   @Transactional
-  public PedidoResponse removerItem(Long id, ItemPedidoDto item) {
-    Pedido pedidoBuscado = buscarPedidoPorIdOuLancarExcecao(id);
+  public PedidoResponse atualizarRastreio(Long id, AtualizarRastreioRequest body) {
+    Pedido pedido = buscarPedidoPorIdOuLancarExcecao(id);
+    pedido.setCodigoRastreio(body.codigoRastreio());
 
-    ItemPedido itemExistente = buscarItemNoPedido(pedidoBuscado, item.produtoId());
-
-    if(itemExistente == null) {
-      throw new ItemNotFoundException("Item não encontrado dentro do pedido.");
-    }
-
-    if(item.quantidade() > 0) {
-      removerItemPedido(itemExistente, item);
-    } else {
-      excluirItemPedido(pedidoBuscado, itemExistente);
-    }
-
-    atualizarValorTotalPedido(pedidoBuscado);
-
-    return PedidoMapper.toPedidoResponse(pedidoRepository.save(pedidoBuscado));
+    return PedidoMapper.toPedidoResponse(pedidoRepository.save(pedido));
   }
 
   private Pedido buscarPedidoPorIdOuLancarExcecao(Long id) {
     return pedidoRepository.findById(id).orElseThrow(
         () -> new PedidoNotFoundException("Pedido com id: " + id + " não encontrado")
     );
-  }
-
-  private void validarQuantidadeAdicionarItem(ItemPedidoDto itemDto) {
-    if (itemDto.quantidade() <= 0) {
-      throw new QuantidadeErradaException("A quantidade do item deve ser superior a zero");
-    }
   }
 
   private ItemPedido buscarItemNoPedido(Pedido pedido, Long produtoId) {
@@ -145,28 +133,20 @@ public class PedidoServiceImpl implements PedidoService {
         .orElse(null);
   }
 
-  private void atualizarAdicaoItemPedido(ItemPedido itemExistente, ItemPedidoDto itemDto) {
-    if (itemDto.quantidade() <= itemExistente.getQuantidade()) {
-      throw new QuantidadeErradaException("A quantidade do item deve ser superior à quantidade do pedido original");
-    }
+  private void atualizarItemPedido(ItemPedido itemExistente, ItemPedidoDto itemDto) {
     itemExistente.setQuantidade(itemDto.quantidade());
     itemExistente.setPreco(itemDto.preco());
   }
 
   private void adicionarNovoItem(Pedido pedido, ItemPedidoDto itemDto) {
     ItemPedido novoItem = new ItemPedido(itemDto.produtoId(), itemDto.quantidade(), itemDto.preco());
+    novoItem.setPedido(pedido);
     pedido.getItensPedido().add(novoItem);
   }
 
-  private void removerItemPedido(ItemPedido itemPedido, ItemPedidoDto itemDto) {
-    if(itemDto.quantidade() > itemPedido.getQuantidade()) {
-      throw new QuantidadeErradaException("A quantidade do item deve ser inferior à quantidade do pedido original");
-    }
-    itemPedido.setQuantidade(itemDto.quantidade());
-    itemPedido.setPreco(itemDto.preco());
-  }
-
-  private void excluirItemPedido(Pedido pedido, ItemPedido itemExistente) {
+  @Transactional
+  protected void excluirItemPedido(Pedido pedido, ItemPedido itemExistente) {
+    itemPedidoRepository.deleteById(itemExistente.getId());
     pedido.getItensPedido().remove(itemExistente);
   }
 

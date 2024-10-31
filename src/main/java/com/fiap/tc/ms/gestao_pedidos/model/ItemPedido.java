@@ -1,10 +1,8 @@
 package com.fiap.tc.ms.gestao_pedidos.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "tb_item_pedido")
@@ -23,6 +21,7 @@ public class ItemPedido {
   private double preco;
   @ManyToOne
   @JoinColumn(name = "pedido_id")
+  @Setter
   private Pedido pedido;
 
 
