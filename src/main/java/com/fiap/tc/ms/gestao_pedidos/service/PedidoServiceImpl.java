@@ -11,26 +11,32 @@ import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoStatusAtualizadoResponse
 import com.fiap.tc.ms.gestao_pedidos.exceptions.StatusPedidoInvalidoException;
 import com.fiap.tc.ms.gestao_pedidos.mapper.PedidoMapper;
 import com.fiap.tc.ms.gestao_pedidos.model.ItemPedido;
+import com.fiap.tc.ms.gestao_pedidos.model.Pagamento;
 import com.fiap.tc.ms.gestao_pedidos.model.Pedido;
+import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPagamento;
 import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPedido;
 import com.fiap.tc.ms.gestao_pedidos.repository.ItemPedidoRepository;
 import com.fiap.tc.ms.gestao_pedidos.repository.PedidoRepository;
 import com.fiap.tc.ms.gestao_pedidos.exceptions.PedidoNotFoundException;
 import com.fiap.tc.ms.gestao_pedidos.utils.MatematicaUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 @Service
 public class PedidoServiceImpl implements PedidoService {
-  @Autowired
-  private PedidoRepository pedidoRepository;
-  @Autowired
-  private ItemPedidoRepository itemPedidoRepository;
+  private final PedidoRepository pedidoRepository;
+  private final ItemPedidoRepository itemPedidoRepository;
+
+  public PedidoServiceImpl(PedidoRepository pedidoRepository, ItemPedidoRepository itemPedidoRepository) {
+    this.pedidoRepository = pedidoRepository;
+    this.itemPedidoRepository = itemPedidoRepository;
+  }
 
   @Override
   @Transactional(readOnly = true)
@@ -49,6 +55,16 @@ public class PedidoServiceImpl implements PedidoService {
   @Transactional
   public PedidoResponse cadastrarPedido(CadastrarPedidoRequest pedidoRequest) {
     Pedido pedido = PedidoMapper.toPedido(pedidoRequest);
+    double valorTotalPedido = MatematicaUtil.calcularValorTotal(pedido.getItensPedido());
+    Pagamento pagamento = new Pagamento();
+
+    pagamento.setTitulo("Compra realizada com sucesso");
+    pagamento.setDescricao("Pagamento realizado no dia " + Instant.now() + " com o valor total de " + valorTotalPedido);
+    pagamento.setValor(BigDecimal.valueOf(valorTotalPedido));
+    pagamento.setStatus(StatusPagamento.APROVADO);
+    pagamento.setPedido(pedido);
+
+    pedido.setPagamento(pagamento);
 
     return PedidoMapper.toPedidoResponse(pedidoRepository.save(pedido));
   }
