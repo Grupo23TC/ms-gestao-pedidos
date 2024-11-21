@@ -87,7 +87,7 @@ public class PedidoController {
     return ResponseEntity.ok(pedidoService.buscarPedidosPorId(id));
   }
 
-  @PutMapping("atualizar-rastreio/{id}")
+  @PutMapping("/atualizar-rastreio/{id}")
   public ResponseEntity<PedidoResponse> atualizarRastreioPedido(
       @PathVariable Long id,
       @RequestBody AtualizarRastreioRequest body

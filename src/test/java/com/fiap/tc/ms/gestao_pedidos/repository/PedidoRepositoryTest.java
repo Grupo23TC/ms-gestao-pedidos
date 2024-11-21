@@ -39,7 +39,7 @@ class PedidoRepositoryTest {
   }
 
   @Test
-  void deveCriarPedido() {
+  void deveCadastrarPedido() {
     Pedido pedido = PedidoUtil.gerarPedido();
 
     when(repository.save(any(Pedido.class))).thenAnswer(answer -> answer.getArgument(0));
@@ -128,7 +128,7 @@ class PedidoRepositoryTest {
     }
 
     @Test
-    void deveBuscarPedidoPorIdUsuario() {
+    void deveBuscarPedidoPorUsuarioId() {
       Pedido pedido1 = PedidoUtil.gerarPedido();
       Pedido pedido2 = PedidoUtil.gerarPedido();
       Pedido pedido3 = PedidoUtil.gerarPedido();
