@@ -92,6 +92,8 @@ public class ControllerExceptionHandler {
     return ResponseEntity.status(status).body(erro);
   }
 
+
+
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErroCustomizado> handleMethodArgumentNotValidException(
       MethodArgumentNotValidException ex,
