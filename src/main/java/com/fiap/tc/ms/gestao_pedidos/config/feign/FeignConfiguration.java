@@ -1,12 +1,13 @@
 package com.fiap.tc.ms.gestao_pedidos.config.feign;
 
 import feign.Retryer;
+import org.springframework.cloud.openfeign.FeignClientsConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
 import java.util.concurrent.TimeUnit;
 
-@Import(FeignConfiguration.class)
+@Import(FeignClientsConfiguration.class)
 public class FeignConfiguration {
   @Bean
   public Retryer feignRetryer() {

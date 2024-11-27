@@ -58,7 +58,7 @@ class PedidoRepositoryTest {
   }
 
   @Nested
-  class BuscaPedidos {
+  class BuscarPedidos {
     @Test
     void deveListarPedidosPaginado() {
       Pedido pedido1 = PedidoUtil.gerarPedido();
@@ -76,22 +76,11 @@ class PedidoRepositoryTest {
       assertThat(pedidos)
           .isNotNull()
           .isNotEmpty()
-          .isInstanceOf(Page.class);
-
-      assertThat(pedidos.getContent())
+          .isInstanceOf(Page.class)
           .hasSize(listaDePedidos.size());
 
-      assertThat(pedidos.getTotalElements())
-          .isEqualTo(listaDePedidos.size());
-
-      assertThat(pedidos.stream().toList().getFirst().getPedidoId())
-          .isEqualTo(pedido1.getPedidoId());
-
-      assertThat(pedidos.stream().toList().get(1).getPedidoId())
-          .isEqualTo(pedido2.getPedidoId());
-
-      assertThat(pedidos.stream().toList().get(2).getPedidoId())
-          .isEqualTo(pedido3.getPedidoId());
+      assertThat(pedidos.getContent())
+          .containsExactlyElementsOf(listaDePedidos);
 
       verify(repository, times(1)).findAll(pageRequest);
     }
@@ -141,16 +130,11 @@ class PedidoRepositoryTest {
       assertThat(pedidos)
           .isNotNull()
           .isNotEmpty()
+          .isInstanceOf(List.class)
           .hasSize(listaDePedidos.size());
 
-      assertThat(pedidos.stream().toList().get(0).getPedidoId())
-        .isEqualTo(pedido1.getPedidoId());
-
-      assertThat(pedidos.stream().toList().get(1).getPedidoId())
-        .isEqualTo(pedido2.getPedidoId());
-
-      assertThat(pedidos.stream().toList().get(2).getPedidoId())
-        .isEqualTo(pedido3.getPedidoId());
+      assertThat(pedidos)
+          .containsExactlyElementsOf(listaDePedidos);
 
       verify(repository, times(1)).findByUsuarioId(anyLong());
     }
@@ -185,22 +169,11 @@ class PedidoRepositoryTest {
       assertThat(pedidos)
           .isNotNull()
           .isNotEmpty()
-          .isInstanceOf(Page.class);
-
-      assertThat(pedidos.getContent())
+          .isInstanceOf(Page.class)
           .hasSize(listaDePedidos.size());
 
-      assertThat(pedidos.getTotalElements())
-          .isEqualTo(listaDePedidos.size());
-
-      assertThat(pedidos.stream().toList().getFirst().getStatus())
-          .isEqualTo(pedido1.getStatus());
-
-      assertThat(pedidos.stream().toList().get(1).getStatus())
-          .isEqualTo(pedido2.getStatus());
-
-      assertThat(pedidos.stream().toList().get(2).getStatus())
-          .isEqualTo(pedido3.getStatus());
+      assertThat(pedidos.getContent())
+          .containsExactlyElementsOf(listaDePedidos);
 
       verify(repository, times(1)).findByStatus(any(StatusPedido.class), any(Pageable.class));
     }
