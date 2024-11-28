@@ -78,6 +78,20 @@ public class ControllerExceptionHandler {
     return ResponseEntity.status(UNPROCESSABLE_ENTITY).body(erro);
   }
 
+  @ExceptionHandler(ProdutoNotFoundException.class)
+  public ResponseEntity<ErroCustomizado> handleProdutoNotFoundException(ProdutoNotFoundException ex, HttpServletRequest request) {
+    HttpStatus status  = HttpStatus.BAD_REQUEST;
+
+    ErroCustomizado erro = new ErroCustomizado(
+        ex.getMessage(),
+        Instant.now(),
+        request.getRequestURI(),
+        status.value()
+    );
+
+    return ResponseEntity.status(status).body(erro);
+  }
+
   @ExceptionHandler(ConnectException.class)
   public ResponseEntity<ErroCustomizado> handleConnectException(ConnectException ex, HttpServletRequest request) {
     HttpStatus status  = HttpStatus.BAD_REQUEST;
@@ -91,8 +105,6 @@ public class ControllerExceptionHandler {
 
     return ResponseEntity.status(status).body(erro);
   }
-
-
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErroCustomizado> handleMethodArgumentNotValidException(

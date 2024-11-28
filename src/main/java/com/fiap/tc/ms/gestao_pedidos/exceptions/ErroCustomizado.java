@@ -1,15 +1,22 @@
 package com.fiap.tc.ms.gestao_pedidos.exceptions;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 
 @Getter
 @RequiredArgsConstructor
+@NoArgsConstructor
 public class ErroCustomizado {
-    private final String erro;
-    private final Instant horario;
-    private final String rota;
-    private final Integer status;
+    @NonNull
+    private String erro;
+    @NonNull
+    private Instant horario;
+    @NonNull
+    private String rota;
+    @NonNull
+    private Integer status;
 }

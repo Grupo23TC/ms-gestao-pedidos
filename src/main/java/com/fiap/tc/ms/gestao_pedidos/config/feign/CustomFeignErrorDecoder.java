@@ -1,6 +1,7 @@
 package com.fiap.tc.ms.gestao_pedidos.config.feign;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fiap.tc.ms.gestao_pedidos.exceptions.ErroCustomizado;
 import com.fiap.tc.ms.gestao_pedidos.exceptions.ProdutoNotFoundException;
 import feign.Response;
@@ -13,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 
 public class CustomFeignErrorDecoder implements ErrorDecoder {
   private final ErrorDecoder defaultDecoder = new Default();
-  private final ObjectMapper objectMapper = new ObjectMapper(); // Para processar JSON.
+  private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
   @Override
   public Exception decode(String methodKey, Response response) {
@@ -24,10 +25,7 @@ public class CustomFeignErrorDecoder implements ErrorDecoder {
         ErroCustomizado errorResponse = objectMapper.readValue(body, ErroCustomizado.class);
 
         return new ProdutoNotFoundException(
-            errorResponse.getErro(),
-            errorResponse.getHorario(),
-            errorResponse.getRota(),
-            response.status()
+            errorResponse.getErro()
         );
       } catch (IOException e) {
         return new RuntimeException("Erro ao processar o corpo da resposta: " + e.getMessage());
