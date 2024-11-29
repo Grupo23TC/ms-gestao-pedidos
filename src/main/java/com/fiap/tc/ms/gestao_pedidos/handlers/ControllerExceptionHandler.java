@@ -32,72 +32,12 @@ public class ControllerExceptionHandler {
     return ResponseEntity.status(status).body(erroCustomizado);
   }
 
-  @ExceptionHandler(ItemNotFoundException.class)
-  public ResponseEntity<ErroCustomizado> handleItemNotFoundException(
-      ItemNotFoundException ex,
-      HttpServletRequest request
-  ) {
-    HttpStatus status  = HttpStatus.NOT_FOUND;
-    ErroCustomizado erroCustomizado = new ErroCustomizado(
-        ex.getMessage(),
-        Instant.now(),
-        request.getRequestURI(),
-        status.value()
-    );
-
-    return ResponseEntity.status(status).body(erroCustomizado);
-  }
-
-  @ExceptionHandler(QuantidadeErradaException.class)
-  public ResponseEntity<ErroCustomizado> handleQuantidadeErradaException(
-      QuantidadeErradaException ex,
-      HttpServletRequest request
-  ) {
-    ErroCustomizado erroCustomizado = new ErroCustomizado(
-        ex.getMessage(),
-        Instant.now(),
-        request.getRequestURI(),
-        UNPROCESSABLE_ENTITY.value()
-    );
-
-    return ResponseEntity.status(UNPROCESSABLE_ENTITY).body(erroCustomizado);
-  }
-
-  @ExceptionHandler(StatusPedidoInvalidoException.class)
-  public ResponseEntity<ErroCustomizado> handleStatusPedidoInvalidoException(
-      MethodArgumentNotValidException ex,
-      HttpServletRequest request
-  ) {
-    ErroCustomizado erro = new ErroCustomizado(
-        ex.getMessage(),
-        Instant.now(),
-        request.getRequestURI(),
-        UNPROCESSABLE_ENTITY.value()
-    );
-
-    return ResponseEntity.status(UNPROCESSABLE_ENTITY).body(erro);
-  }
-
   @ExceptionHandler(ProdutoNotFoundException.class)
   public ResponseEntity<ErroCustomizado> handleProdutoNotFoundException(ProdutoNotFoundException ex, HttpServletRequest request) {
     HttpStatus status  = HttpStatus.BAD_REQUEST;
 
     ErroCustomizado erro = new ErroCustomizado(
         ex.getMessage(),
-        Instant.now(),
-        request.getRequestURI(),
-        status.value()
-    );
-
-    return ResponseEntity.status(status).body(erro);
-  }
-
-  @ExceptionHandler(ConnectException.class)
-  public ResponseEntity<ErroCustomizado> handleConnectException(ConnectException ex, HttpServletRequest request) {
-    HttpStatus status  = HttpStatus.BAD_REQUEST;
-
-    ErroCustomizado erro = new ErroCustomizado(
-        "Não foi possível conectar a um dos nossos serviços",
         Instant.now(),
         request.getRequestURI(),
         status.value()

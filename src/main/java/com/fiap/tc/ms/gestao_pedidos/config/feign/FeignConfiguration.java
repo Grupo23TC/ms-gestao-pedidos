@@ -14,9 +14,4 @@ public class FeignConfiguration {
   public Retryer feignRetryer() {
     return new Retryer.Default(100, TimeUnit.SECONDS.toMillis(1), 2);
   }
-
-  @Bean
-  public ErrorDecoder feignErrorDecoder() {
-    return new CustomFeignErrorDecoder();
-  }
 }

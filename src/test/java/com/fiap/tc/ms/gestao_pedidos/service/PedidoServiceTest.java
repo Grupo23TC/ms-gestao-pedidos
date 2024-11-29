@@ -8,7 +8,10 @@ import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoPaginadoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoStatusAtualizadoResponse;
 import com.fiap.tc.ms.gestao_pedidos.exceptions.PedidoNotFoundException;
+import com.fiap.tc.ms.gestao_pedidos.exceptions.SemEstoqueException;
 import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPedido;
+import com.fiap.tc.ms.gestao_pedidos.service.impl.PedidoServiceImpl;
+import com.fiap.tc.ms.gestao_pedidos.utils.FeignExceptionUtil;
 import com.fiap.tc.ms.gestao_pedidos.utils.PedidoUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +36,7 @@ import static org.mockito.Mockito.*;
 
 public class PedidoServiceTest {
   @Mock
-  private PedidoService pedidoSerivce;
+  private PedidoServiceImpl pedidoSerivce;
 
 
   AutoCloseable openMocks;
