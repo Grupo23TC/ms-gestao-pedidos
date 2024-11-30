@@ -117,6 +117,8 @@ public class PedidoServiceTest {
           .isNotNull()
           .isInstanceOf(PedidoNotFoundException.class)
           .hasMessage("Pedido com id: " + id + " não encontrado");
+
+      verify(pedidoSerivce, times(1)).buscarPedidosPorId(anyLong());
     }
 
     @Test
@@ -222,6 +224,7 @@ public class PedidoServiceTest {
           .isInstanceOf(PedidoNotFoundException.class)
           .hasMessage("Pedido com id: " + id + " não encontrado");
 
+      verify(pedidoSerivce, times(1)).atualizarRastreio(any(Long.class), any(AtualizarRastreioRequest.class));
     }
 
     @Test
@@ -262,6 +265,7 @@ public class PedidoServiceTest {
           .isInstanceOf(PedidoNotFoundException.class)
           .hasMessage("Pedido com id: " + id + " não encontrado");
 
+      verify(pedidoSerivce, times(1)).atualizarStatusPedido(anyLong(), any(AtualizarStatusPedidoRequest.class));
     }
   }
 
@@ -297,6 +301,8 @@ public class PedidoServiceTest {
           .isNotNull()
           .isInstanceOf(PedidoNotFoundException.class)
           .hasMessage("Pedido com id: " + id + " não encontrado");
+
+      verify(pedidoSerivce, times(1)).excluirPedido(any(Long.class));
     }
   }
 

@@ -4,9 +4,11 @@ import com.fiap.tc.ms.gestao_pedidos.dto.request.AtualizarRastreioRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.AtualizarStatusPedidoRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.CadastrarPedidoRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoDeletadoResponse;
-import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoPaginadoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoStatusAtualizadoResponse;
+import com.fiap.tc.ms.gestao_pedidos.exceptions.PedidoNotFoundException;
+import com.fiap.tc.ms.gestao_pedidos.exceptions.ProdutoNotFoundException;
+import com.fiap.tc.ms.gestao_pedidos.handlers.ControllerExceptionHandler;
 import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPedido;
 import com.fiap.tc.ms.gestao_pedidos.service.PedidoService;
 import com.fiap.tc.ms.gestao_pedidos.utils.PedidoUtil;
@@ -15,7 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.domain.Page;
+import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,8 +29,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.Collections;
 import java.util.List;
 
-import static org.assertj.core.condition.Not.not;
-import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -50,7 +50,14 @@ class PedidoControllerTest {
     mock = MockitoAnnotations.openMocks(this);
     PedidoController controller = new PedidoController(pedidoService);
     PageableHandlerMethodArgumentResolver pageableResolver = new PageableHandlerMethodArgumentResolver();
-    mockMvc = MockMvcBuilders.standaloneSetup(controller).setCustomArgumentResolvers(pageableResolver).build();
+    mockMvc = MockMvcBuilders.standaloneSetup(controller)
+        .setCustomArgumentResolvers(pageableResolver)
+        .setControllerAdvice(new ControllerExceptionHandler())
+        .addFilter((request, response, chain) -> {
+          response.setCharacterEncoding("UTF-8");
+          chain.doFilter(request, response);
+        })
+        .build();
   }
 
   @AfterEach
@@ -80,17 +87,30 @@ class PedidoControllerTest {
 
   @Test
   void deveSalvarPedido() throws Exception {
-    CadastrarPedidoRequest request = new CadastrarPedidoRequest(1L, List.of());
     PedidoResponse response = PedidoUtil.gerarPedidoResponse();
     when(pedidoService.cadastrarPedido(any(CadastrarPedidoRequest.class))).thenReturn(response);
 
     mockMvc.perform(post("/pedidos")
             .contentType(MediaType.APPLICATION_JSON)
-            .content("{\"usuarioId\":1,\"itensPedido\":[]}") // JSON de exemplo
+            .content("{\"usuarioId\":1,\"itensPedido\":[]}")
         )
         .andExpect(status().isCreated())
         .andExpect(header().exists("Location"))
         .andExpect(jsonPath("$.pedidoId").value(1));
+  }
+
+  @Test
+  void deveRetornarBadRequest_QuandoProdutoNaoEncontrado() throws Exception {
+    when(pedidoService.cadastrarPedido(any(CadastrarPedidoRequest.class)))
+        .thenThrow(new ProdutoNotFoundException("Produto não encontrado"));
+
+    mockMvc.perform(post("/pedidos")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"usuarioId\":1,\"itensPedido\":[]}")
+        )
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.erro").value("Produto não encontrado"))
+        .andExpect(jsonPath("$.status").value(400));
   }
 
   @Test
@@ -159,6 +179,16 @@ class PedidoControllerTest {
     mockMvc.perform(get("/pedidos/" + id))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.pedidoId").value(id));
+  }
+
+  @Test
+  void deveRetornarNotFound_QuandoPedidoNaoEncontrado() throws Exception {
+    when(pedidoService.buscarPedidosPorId(eq(1L))).thenThrow(new PedidoNotFoundException("Pedido não encontrado"));
+
+    mockMvc.perform(get("/pedidos/1"))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.erro").value("Pedido não encontrado"))
+        .andExpect(jsonPath("$.status").value(404));
   }
 
   @Test

@@ -37,8 +37,6 @@ public class PedidoUtil {
         BigDecimal.ONE,
         1L,
         List.of(
-            ItemPedidoUtil.gerarItemPedido(),
-            ItemPedidoUtil.gerarItemPedido(),
             ItemPedidoUtil.gerarItemPedido()
         ),
         1L
@@ -61,7 +59,14 @@ public class PedidoUtil {
   public static CadastrarPedidoRequest gerarCadastrarPedidoRequest() {
     return new CadastrarPedidoRequest(
       1L,
-      List.of(ItemPedidoUtil.gerarItemPedidoDto(), ItemPedidoUtil.gerarItemPedidoDto(), ItemPedidoUtil.gerarItemPedidoDto())
+      List.of(ItemPedidoUtil.gerarItemPedidoDto())
+    );
+  }
+
+  public static CadastrarPedidoRequest gerarCadastrarPedidoRequestProdutoNaoExiste() {
+    return new CadastrarPedidoRequest(
+        1L,
+        List.of(ItemPedidoUtil.gerarItemPedidoDtoProdutoNaoExiste())
     );
   }
 }

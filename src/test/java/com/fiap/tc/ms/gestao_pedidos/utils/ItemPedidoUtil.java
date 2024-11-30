@@ -10,7 +10,7 @@ public class ItemPedidoUtil {
   public static ItemPedidoResponseDTO gerarItemPedido() {
     return new  ItemPedidoResponseDTO(
         1L,
-        5,
+        1,
         BigDecimal.ONE
     );
   }
@@ -18,7 +18,14 @@ public class ItemPedidoUtil {
   public static ItemPedidoDTO gerarItemPedidoDto() {
     return new ItemPedidoDTO(
         1L,
-        5
+        1
+    );
+  }
+
+  public static ItemPedidoDTO gerarItemPedidoDtoProdutoNaoExiste() {
+    return new ItemPedidoDTO(
+        1000000000000L,
+        1
     );
   }
 }

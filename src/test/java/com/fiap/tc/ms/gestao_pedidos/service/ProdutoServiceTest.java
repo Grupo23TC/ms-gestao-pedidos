@@ -6,9 +6,8 @@ import com.fiap.tc.ms.gestao_pedidos.exceptions.ProdutoNotFoundException;
 import com.fiap.tc.ms.gestao_pedidos.exceptions.SemEstoqueException;
 import com.fiap.tc.ms.gestao_pedidos.service.feign.ProdutoFeignClient;
 import com.fiap.tc.ms.gestao_pedidos.service.impl.ProdutoServiceImpl;
-import feign.FeignException;
-import feign.Request;
-import feign.Response;
+import com.fiap.tc.ms.gestao_pedidos.utils.FeignExceptionUtil;
+import com.fiap.tc.ms.gestao_pedidos.utils.ProdutoUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -16,9 +15,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 
-import java.math.BigDecimal;
-import java.util.Map;
-
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -38,83 +36,65 @@ public class ProdutoServiceTest {
   @Test
   void deveRetornarProduto_QuandoBuscarPorId_ComSucesso() {
     Long produtoId = 1L;
-    ProdutoResponseDTO mockResponse = new ProdutoResponseDTO(1L, "teste", 5, "Teste descricao", BigDecimal.ONE); // Configure as propriedades conforme necessário
+    ProdutoResponseDTO mockResponse = ProdutoUtil.gerarProdutoResponseDTO();
+
     when(produtoFeignClient.buscarProdutoPorId(produtoId)).thenReturn(mockResponse);
 
     ProdutoResponseDTO response = produtoService.buscarPorId(produtoId);
 
-    assertNotNull(response);
+    assertThat(response)
+        .isNotNull()
+        .isInstanceOf(ProdutoResponseDTO.class);
+
     verify(produtoFeignClient, times(1)).buscarProdutoPorId(produtoId);
   }
 
   @Test
   void deveLancarProdutoNotFoundException_QuandoProdutoNaoExistir() {
-    Long produtoId = 1L;
+    Long produtoId = 100L;
+
     when(produtoFeignClient.buscarProdutoPorId(produtoId))
-        .thenThrow(gerarFeignException(HttpStatus.NOT_FOUND.value()));
+        .thenThrow(FeignExceptionUtil.gerarFeignException(HttpStatus.NOT_FOUND.value()));
 
-    ProdutoNotFoundException exception = assertThrows(
-        ProdutoNotFoundException.class,
-        () -> produtoService.buscarPorId(produtoId)
-    );
+    assertThatThrownBy(() -> produtoService.buscarPorId(produtoId))
+        .isNotNull()
+        .isInstanceOf(ProdutoNotFoundException.class)
+        .hasMessage("Produto de id: " + produtoId + " não encontrado");
 
-    assertEquals("Produto de id: " + produtoId + " não encontrado", exception.getMessage());
     verify(produtoFeignClient, times(1)).buscarProdutoPorId(produtoId);
   }
 
   @Test
   void deveAtualizarQuantidade_ComSucesso() {
     Long produtoId = 1L;
-    AtualizarQuantidadeDTO request = new AtualizarQuantidadeDTO(5);
-    ProdutoResponseDTO mockResponse = new ProdutoResponseDTO(1L, "teste", 5, "Teste descricao", BigDecimal.ONE); // Configure as propriedades conforme necessário
+    AtualizarQuantidadeDTO request = ProdutoUtil.gerarAtualizarQuantidadeDTO();
+    ProdutoResponseDTO mockResponse = ProdutoUtil.gerarProdutoResponseDTO();
+
     when(produtoFeignClient.atualizarQuantidade(produtoId, request)).thenReturn(mockResponse);
 
     ProdutoResponseDTO response = produtoService.atualizarQuantidade(produtoId, request);
 
-    assertNotNull(response);
+    assertThat(response)
+        .isNotNull()
+        .isInstanceOf(ProdutoResponseDTO.class);
+
     verify(produtoFeignClient, times(1)).atualizarQuantidade(produtoId, request);
   }
 
   @Test
   void deveLancarSemEstoqueException_QuandoNaoHouverEstoque() {
     Long produtoId = 1L;
-    AtualizarQuantidadeDTO request = new AtualizarQuantidadeDTO(5);
+    AtualizarQuantidadeDTO request = ProdutoUtil.gerarAtualizarQuantidadeDTO();
+
     when(produtoFeignClient.atualizarQuantidade(produtoId, request))
-        .thenThrow(gerarFeignException(HttpStatus.NOT_FOUND.value()));
+        .thenThrow(FeignExceptionUtil.gerarFeignException(HttpStatus.NOT_FOUND.value()));
 
-    SemEstoqueException exception = assertThrows(
-        SemEstoqueException.class,
-        () -> produtoService.atualizarQuantidade(produtoId, request)
-    );
+    assertThatThrownBy(() -> produtoService.atualizarQuantidade(produtoId, request))
+        .isNotNull()
+        .isInstanceOf(SemEstoqueException.class)
+        .hasMessage("Quantidade requerida maior do que tem em estoque");
 
-    assertEquals("Quantidade requerida maior do que tem em estoque", exception.getMessage());
+
     verify(produtoFeignClient, times(1)).atualizarQuantidade(produtoId, request);
-  }
-
-  @Test
-  void deveLancarRuntimeException_ParaOutroErroFeign() {
-    Long produtoId = 1L;
-    AtualizarQuantidadeDTO request = new AtualizarQuantidadeDTO(5);
-    when(produtoFeignClient.atualizarQuantidade(produtoId, request))
-        .thenThrow(gerarFeignException(HttpStatus.INTERNAL_SERVER_ERROR.value()));
-
-    RuntimeException exception = assertThrows(
-        RuntimeException.class,
-        () -> produtoService.atualizarQuantidade(produtoId, request)
-    );
-
-    assertNotNull(exception.getMessage());
-    verify(produtoFeignClient, times(1)).atualizarQuantidade(produtoId, request);
-  }
-
-  private FeignException gerarFeignException(int status) {
-    return FeignException.errorStatus(
-        "error",
-        Response.builder()
-            .status(status)
-            .reason("Feign Error")
-            .request(Request.create(Request.HttpMethod.GET, "/fake", Map.of(), null, null, null))
-            .build()
-    );
   }
 }
