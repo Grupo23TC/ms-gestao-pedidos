@@ -72,8 +72,19 @@ Adotamos o TDD como metodologia para o desenvolvimento e utilizamos o JUnit como
 unitários e de integração.
 
 ## Guia de implantação
-Para rodar o projeto localmente, precisamos que o microsservice de ms-produtos-catalog esteja rodando, pois o endpoint de cadastro utiliza esse microsservice para fazer a alteração no estoque. Além disso, precisamos do  [Docker Hub](https://www.docker.com/) instalado.
-Rode o comando: <b><i>"docker-compose up"</i></b>
+Antes de iniciar o projeto, devemos ter a seguinte rede no docker:
+PS: caso você já tenha criado, não precisa criá-la novamente.
+
+```bash
+docker network create shared_network
+```
+Para rodar o projeto localmente, precisamos que o microsservice de ms-produtos-catalog esteja rodando, pois o endpoint de cadastro utiliza esse microsservice para fazer a alteração no estoque.
+
+Além disso, precisamos do  [Docker Hub](https://www.docker.com/) instalado.
+Rode o comando: 
+``` bash
+docker-compose up
+```
 Confira em seu Docker Desktop a subida do container e suas respectivas aplicações e bancos de dados isolados.
 
 ## Desenvolvedores
