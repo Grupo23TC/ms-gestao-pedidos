@@ -4,6 +4,7 @@ import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPedido;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,8 +19,10 @@ public class Pedido {
   private Long codigoRastreio;
   @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
   private final List<ItemPedido> itensPedido = new ArrayList<>();
-  private double valorTotal;
+  private BigDecimal valorTotal;
   @Enumerated(EnumType.STRING)
   private StatusPedido status;
+  @OneToOne(mappedBy = "pedido", cascade = CascadeType.ALL)
+  private Pagamento pagamento;
 
 }

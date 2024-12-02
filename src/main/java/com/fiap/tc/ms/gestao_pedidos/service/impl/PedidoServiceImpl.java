@@ -1,36 +1,43 @@
-package com.fiap.tc.ms.gestao_pedidos.service;
+package com.fiap.tc.ms.gestao_pedidos.service.impl;
 
-import com.fiap.tc.ms.gestao_pedidos.dto.ItemPedidoDto;
+import com.fiap.tc.ms.gestao_pedidos.dto.ItemPedidoDTO;
+import com.fiap.tc.ms.gestao_pedidos.dto.request.AtualizarQuantidadeDTO;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.AtualizarRastreioRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.AtualizarStatusPedidoRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.CadastrarPedidoRequest;
-import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoDeletadoResponse;
-import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoPaginadoResponse;
-import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoResponse;
-import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoStatusAtualizadoResponse;
-import com.fiap.tc.ms.gestao_pedidos.exceptions.StatusPedidoInvalidoException;
+import com.fiap.tc.ms.gestao_pedidos.dto.response.*;
 import com.fiap.tc.ms.gestao_pedidos.mapper.PedidoMapper;
 import com.fiap.tc.ms.gestao_pedidos.model.ItemPedido;
+import com.fiap.tc.ms.gestao_pedidos.model.Pagamento;
 import com.fiap.tc.ms.gestao_pedidos.model.Pedido;
+import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPagamento;
 import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPedido;
-import com.fiap.tc.ms.gestao_pedidos.repository.ItemPedidoRepository;
 import com.fiap.tc.ms.gestao_pedidos.repository.PedidoRepository;
 import com.fiap.tc.ms.gestao_pedidos.exceptions.PedidoNotFoundException;
+import com.fiap.tc.ms.gestao_pedidos.service.PedidoService;
+import com.fiap.tc.ms.gestao_pedidos.service.ProdutoService;
 import com.fiap.tc.ms.gestao_pedidos.utils.MatematicaUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 @Service
 public class PedidoServiceImpl implements PedidoService {
-  @Autowired
-  private PedidoRepository pedidoRepository;
-  @Autowired
-  private ItemPedidoRepository itemPedidoRepository;
+  private final PedidoRepository pedidoRepository;
+  private final ProdutoService produtoService;
+
+  public PedidoServiceImpl(
+      PedidoRepository pedidoRepository,
+      ProdutoServiceImpl produtoService
+      ) {
+    this.pedidoRepository = pedidoRepository;
+    this.produtoService = produtoService;
+  }
 
   @Override
   @Transactional(readOnly = true)
@@ -48,9 +55,20 @@ public class PedidoServiceImpl implements PedidoService {
   @Override
   @Transactional
   public PedidoResponse cadastrarPedido(CadastrarPedidoRequest pedidoRequest) {
-    Pedido pedido = PedidoMapper.toPedido(pedidoRequest);
+    Pedido pedido = PedidoMapper.toPedidoSemItems(pedidoRequest);
 
-    return PedidoMapper.toPedidoResponse(pedidoRepository.save(pedido));
+    adicionarItensNoPedido(pedidoRequest.itensPedido(), pedido);
+
+    BigDecimal valorTotalPedido = MatematicaUtil.calcularValorTotal(pedido.getItensPedido());
+    pedido.setValorTotal(valorTotalPedido);
+    Pagamento pagamento = gerarPagamento(valorTotalPedido);
+    pedido.setPagamento(pagamento);
+
+    Pedido salvo = pedidoRepository.save(pedido);
+
+    atualizarEstoque(salvo.getItensPedido());
+
+    return PedidoMapper.toPedidoResponse(salvo);
   }
 
   @Override
@@ -86,33 +104,6 @@ public class PedidoServiceImpl implements PedidoService {
 
   @Override
   @Transactional
-  public PedidoResponse atualizarItem(Long id, ItemPedidoDto itemPedidoRequest) {
-    Pedido pedidoBuscado = buscarPedidoPorIdOuLancarExcecao(id);
-
-    if(
-        !pedidoBuscado.getStatus().equals(StatusPedido.CRIADO)
-        && !pedidoBuscado.getStatus().equals(StatusPedido.PROCESSANDO)
-    ) {
-      throw new StatusPedidoInvalidoException("O pedido não pode mais ser editado ");
-    }
-
-    ItemPedido item = buscarItemNoPedido(pedidoBuscado, itemPedidoRequest.produtoId());
-
-    if(item != null && itemPedidoRequest.quantidade() != 0) {
-      atualizarItemPedido(item, itemPedidoRequest);
-    } else if(item != null) {
-      excluirItemPedido(pedidoBuscado, item);
-    } else {
-      adicionarNovoItem(pedidoBuscado, itemPedidoRequest);
-    }
-
-    atualizarValorTotalPedido(pedidoBuscado);
-
-    return PedidoMapper.toPedidoResponse(pedidoRepository.save(pedidoBuscado));
-  }
-
-  @Override
-  @Transactional
   public PedidoResponse atualizarRastreio(Long id, AtualizarRastreioRequest body) {
     Pedido pedido = buscarPedidoPorIdOuLancarExcecao(id);
     pedido.setCodigoRastreio(body.codigoRastreio());
@@ -126,32 +117,27 @@ public class PedidoServiceImpl implements PedidoService {
     );
   }
 
-  private ItemPedido buscarItemNoPedido(Pedido pedido, Long produtoId) {
-    return pedido.getItensPedido().stream()
-        .filter(item -> item.getProdutoId().equals(produtoId))
-        .findFirst()
-        .orElse(null);
+  private void adicionarItensNoPedido(List<ItemPedidoDTO> itens, Pedido pedido) {
+    itens.forEach(item -> {
+      ProdutoResponseDTO produto = produtoService.buscarPorId(item.produtoId());
+      pedido.getItensPedido().add(new ItemPedido(item.produtoId(), item.quantidade(), produto.valor()));
+    });
   }
 
-  private void atualizarItemPedido(ItemPedido itemExistente, ItemPedidoDto itemDto) {
-    itemExistente.setQuantidade(itemDto.quantidade());
-    itemExistente.setPreco(itemDto.preco());
+  private void atualizarEstoque(List<ItemPedido> itens) {
+    itens.forEach(item -> {
+      AtualizarQuantidadeDTO dto = new AtualizarQuantidadeDTO(item.getQuantidade());
+      produtoService.atualizarQuantidade(item.getProdutoId(), dto);
+    });
   }
 
-  private void adicionarNovoItem(Pedido pedido, ItemPedidoDto itemDto) {
-    ItemPedido novoItem = new ItemPedido(itemDto.produtoId(), itemDto.quantidade(), itemDto.preco());
-    novoItem.setPedido(pedido);
-    pedido.getItensPedido().add(novoItem);
-  }
+  private Pagamento gerarPagamento(BigDecimal valorTotalPedido) {
+    Pagamento pagamento = new Pagamento();
+    pagamento.setTitulo("Compra realizada com sucesso");
+    pagamento.setDescricao("Pagamento realizado no dia " + Instant.now() + " com o valor total de " + valorTotalPedido);
+    pagamento.setValor(valorTotalPedido);
+    pagamento.setStatus(StatusPagamento.APROVADO);
 
-  @Transactional
-  protected void excluirItemPedido(Pedido pedido, ItemPedido itemExistente) {
-    itemPedidoRepository.deleteById(itemExistente.getId());
-    pedido.getItensPedido().remove(itemExistente);
-  }
-
-  private void atualizarValorTotalPedido(Pedido pedido) {
-    double novoValorTotal = MatematicaUtil.calcularValorTotal(pedido.getItensPedido());
-    pedido.setValorTotal(novoValorTotal);
+    return pagamento;
   }
 }

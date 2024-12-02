@@ -1,8 +1,9 @@
 package com.fiap.tc.ms.gestao_pedidos.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "tb_item_pedido")
@@ -18,7 +19,7 @@ public class ItemPedido {
   @NonNull
   private int quantidade;
   @NonNull
-  private double preco;
+  private BigDecimal preco;
   @ManyToOne
   @JoinColumn(name = "pedido_id")
   @Setter

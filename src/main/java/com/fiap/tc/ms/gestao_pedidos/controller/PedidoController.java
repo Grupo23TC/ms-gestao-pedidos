@@ -1,6 +1,5 @@
 package com.fiap.tc.ms.gestao_pedidos.controller;
 
-import com.fiap.tc.ms.gestao_pedidos.dto.ItemPedidoDto;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.AtualizarRastreioRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.AtualizarStatusPedidoRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.CadastrarPedidoRequest;
@@ -8,11 +7,9 @@ import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoDeletadoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoPaginadoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoStatusAtualizadoResponse;
-import com.fiap.tc.ms.gestao_pedidos.model.Pedido;
 import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPedido;
 import com.fiap.tc.ms.gestao_pedidos.service.PedidoService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -26,8 +23,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/pedidos")
 public class PedidoController {
-  @Autowired
-  private PedidoService pedidoService;
+  private final PedidoService pedidoService;
+
+  public PedidoController(PedidoService pedidoService) {
+    this.pedidoService = pedidoService;
+  }
 
   @GetMapping
   public ResponseEntity<Page<PedidoPaginadoResponse>> listarPedidos(
@@ -61,14 +61,6 @@ public class PedidoController {
     return ResponseEntity.ok(pedidoService.atualizarStatusPedido(id, status));
   }
 
-  @PutMapping("/atualizar-quantidade-item/{id}")
-  public ResponseEntity<PedidoResponse> adicionarItemPedido(
-      @PathVariable Long id,
-      @Valid @RequestBody ItemPedidoDto item
-  ) {
-    return ResponseEntity.ok(pedidoService.atualizarItem(id, item));
-  }
-
   @GetMapping("/status")
   public ResponseEntity<Page<PedidoResponse>> listarStatusPedido(
       @RequestParam("status") String status,
@@ -87,7 +79,7 @@ public class PedidoController {
     return ResponseEntity.ok(pedidoService.buscarPedidosPorId(id));
   }
 
-  @PutMapping("atualizar-rastreio/{id}")
+  @PutMapping("/atualizar-rastreio/{id}")
   public ResponseEntity<PedidoResponse> atualizarRastreioPedido(
       @PathVariable Long id,
       @RequestBody AtualizarRastreioRequest body
