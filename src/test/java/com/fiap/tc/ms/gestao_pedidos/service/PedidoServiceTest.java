@@ -8,10 +8,8 @@ import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoPaginadoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoResponse;
 import com.fiap.tc.ms.gestao_pedidos.dto.response.PedidoStatusAtualizadoResponse;
 import com.fiap.tc.ms.gestao_pedidos.exceptions.PedidoNotFoundException;
-import com.fiap.tc.ms.gestao_pedidos.exceptions.SemEstoqueException;
 import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPedido;
 import com.fiap.tc.ms.gestao_pedidos.service.impl.PedidoServiceImpl;
-import com.fiap.tc.ms.gestao_pedidos.utils.FeignExceptionUtil;
 import com.fiap.tc.ms.gestao_pedidos.utils.PedidoUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +22,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

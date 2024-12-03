@@ -1,5 +1,6 @@
 package com.fiap.tc.ms.gestao_pedidos.controller;
 
+import com.fiap.tc.ms.gestao_pedidos.dto.ItemPedidoDTO;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.AtualizarRastreioRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.AtualizarStatusPedidoRequest;
 import com.fiap.tc.ms.gestao_pedidos.dto.request.CadastrarPedidoRequest;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageImpl;
@@ -25,6 +27,7 @@ import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.Collections;
 import java.util.List;

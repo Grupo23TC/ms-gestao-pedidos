@@ -12,6 +12,7 @@ import com.fiap.tc.ms.gestao_pedidos.model.Pagamento;
 import com.fiap.tc.ms.gestao_pedidos.model.Pedido;
 import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPagamento;
 import com.fiap.tc.ms.gestao_pedidos.model.enums.StatusPedido;
+import com.fiap.tc.ms.gestao_pedidos.repository.ItemPedidoRepository;
 import com.fiap.tc.ms.gestao_pedidos.repository.PedidoRepository;
 import com.fiap.tc.ms.gestao_pedidos.exceptions.PedidoNotFoundException;
 import com.fiap.tc.ms.gestao_pedidos.service.PedidoService;
@@ -28,15 +29,18 @@ import java.util.List;
 
 @Service
 public class PedidoServiceImpl implements PedidoService {
+  private final ItemPedidoRepository itemPedidoRepository;
   private final PedidoRepository pedidoRepository;
   private final ProdutoService produtoService;
 
   public PedidoServiceImpl(
       PedidoRepository pedidoRepository,
-      ProdutoServiceImpl produtoService
+      ProdutoServiceImpl produtoService,
+      ItemPedidoRepository itemPedidoRepository
       ) {
     this.pedidoRepository = pedidoRepository;
     this.produtoService = produtoService;
+    this.itemPedidoRepository = itemPedidoRepository;
   }
 
   @Override
@@ -64,11 +68,15 @@ public class PedidoServiceImpl implements PedidoService {
     Pagamento pagamento = gerarPagamento(valorTotalPedido);
     pedido.setPagamento(pagamento);
 
-    Pedido salvo = pedidoRepository.save(pedido);
+    Pedido pedidoSalvo = pedidoRepository.save(pedido);
 
-    atualizarEstoque(salvo.getItensPedido());
+    associarItemAoPedido(pedidoSalvo.getItensPedido(), pedidoSalvo);
 
-    return PedidoMapper.toPedidoResponse(salvo);
+    itemPedidoRepository.saveAll(pedidoSalvo.getItensPedido());
+
+    atualizarEstoque(pedidoSalvo.getItensPedido());
+
+    return PedidoMapper.toPedidoResponse(pedidoSalvo);
   }
 
   @Override
@@ -139,5 +147,9 @@ public class PedidoServiceImpl implements PedidoService {
     pagamento.setStatus(StatusPagamento.APROVADO);
 
     return pagamento;
+  }
+
+  private void associarItemAoPedido(List<ItemPedido> itens, Pedido pedido) {
+    itens.forEach(item -> item.setPedido(pedido));
   }
 }

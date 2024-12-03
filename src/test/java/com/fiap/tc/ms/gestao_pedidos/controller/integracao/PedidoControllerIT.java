@@ -55,6 +55,20 @@ public class PedidoControllerIT {
   }
 
   @Test
+  void deveRetornarErrosDeValidacao_QuandoPayloadForInvalido() {
+    String payloadInvalido = PedidoUtil.gerarPayloadInvalido();
+
+    given()
+        .contentType(ContentType.JSON)
+        .body(payloadInvalido)
+        .when()
+        .post("/pedidos")
+        .then()
+        .statusCode(HttpStatus.UNPROCESSABLE_ENTITY.value())
+        .body(matchesJsonSchemaInClasspath("schemas/erroPayloadInvalido.schema.json"));
+  }
+
+  @Test
   void deveRetornarBadRequest_QuandoProdutoNaoEncontrado() {
     given()
         .contentType(ContentType.JSON)

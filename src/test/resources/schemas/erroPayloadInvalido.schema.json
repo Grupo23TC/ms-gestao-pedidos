@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "default": {},
+  "title": "Root Schema",
+  "required": [
+    "erro",
+    "horario",
+    "rota",
+    "status",
+    "erros"
+  ],
+  "properties": {
+    "erro": {
+      "type": "string",
+      "default": "",
+      "title": "The erro Schema",
+      "examples": [
+        "Dados inválidos"
+      ]
+    },
+    "horario": {
+      "type": "string",
+      "default": "",
+      "title": "The horario Schema",
+      "examples": [
+        "2024-12-03T10:58:46.620536800Z"
+      ]
+    },
+    "rota": {
+      "type": "string",
+      "default": "",
+      "title": "The rota Schema",
+      "examples": [
+        "/pedidos"
+      ]
+    },
+    "status": {
+      "type": "integer",
+      "default": 0,
+      "title": "The status Schema",
+      "examples": [
+        422
+      ]
+    },
+    "erros": {
+      "type": "array",
+      "default": [],
+      "title": "The erros Schema",
+      "items": {
+        "type": "object",
+        "title": "A Schema",
+        "required": [
+          "campo",
+          "mensagem"
+        ],
+        "properties": {
+          "campo": {
+            "type": "string",
+            "title": "The campo Schema",
+            "examples": [
+              "itensPedido[0].quantidade",
+              "itensPedido[0].produtoId",
+              "usuarioId"
+            ]
+          },
+          "mensagem": {
+            "type": "string",
+            "title": "The mensagem Schema",
+            "examples": [
+              "A quantidade deve ser um valor positivo ou zero",
+              "O id do produto deve ser positivo",
+              "O id do usuário deve ser positivo"
+            ]
+          }
+        },
+        "examples": [{
+          "campo": "itensPedido[0].quantidade",
+          "mensagem": "A quantidade deve ser um valor positivo ou zero"
+        },
+          {
+            "campo": "itensPedido[0].produtoId",
+            "mensagem": "O id do produto deve ser positivo"
+          },
+          {
+            "campo": "usuarioId",
+            "mensagem": "O id do usuário deve ser positivo"
+          }]
+      },
+      "examples": [
+        [{
+          "campo": "itensPedido[0].quantidade",
+          "mensagem": "A quantidade deve ser um valor positivo ou zero"
+        },
+          {
+            "campo": "itensPedido[0].produtoId",
+            "mensagem": "O id do produto deve ser positivo"
+          },
+          {
+            "campo": "usuarioId",
+            "mensagem": "O id do usuário deve ser positivo"
+          }]
+      ]
+    }
+  },
+  "examples": [{
+    "erro": "Dados inválidos",
+    "horario": "2024-12-03T10:58:46.620536800Z",
+    "rota": "/pedidos",
+    "status": 422,
+    "erros": [{
+      "campo": "itensPedido[0].quantidade",
+      "mensagem": "A quantidade deve ser um valor positivo ou zero"
+    },
+      {
+        "campo": "itensPedido[0].produtoId",
+        "mensagem": "O id do produto deve ser positivo"
+      },
+      {
+        "campo": "usuarioId",
+        "mensagem": "O id do usuário deve ser positivo"
+      }]
+  }]
+}
