@@ -69,4 +69,18 @@ public class PedidoUtil {
         List.of(ItemPedidoUtil.gerarItemPedidoDtoProdutoNaoExiste())
     );
   }
+
+  public static String gerarPayloadInvalido() {
+    return """
+        {
+          "usuarioId": -1,
+          "itensPedido": [
+            {
+              "produtoId": -1,
+              "quantidade": -5
+            }
+          ]
+        }
+        """;
+  }
 }

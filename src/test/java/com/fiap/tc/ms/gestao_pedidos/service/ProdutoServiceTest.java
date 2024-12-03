@@ -17,7 +17,6 @@ import org.springframework.http.HttpStatus;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class ProdutoServiceTest {
@@ -65,6 +64,20 @@ public class ProdutoServiceTest {
   }
 
   @Test
+  void deveLancarRunTimeException_QuandoProdutoNaoExistir() {
+    Long produtoId = 100L;
+
+    when(produtoFeignClient.buscarProdutoPorId(produtoId))
+        .thenThrow(FeignExceptionUtil.gerarFeignException(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+
+    assertThatThrownBy(() -> produtoService.buscarPorId(produtoId))
+        .isNotNull()
+        .isInstanceOf(RuntimeException.class);
+
+    verify(produtoFeignClient, times(1)).buscarProdutoPorId(produtoId);
+  }
+
+  @Test
   void deveAtualizarQuantidade_ComSucesso() {
     Long produtoId = 1L;
     AtualizarQuantidadeDTO request = ProdutoUtil.gerarAtualizarQuantidadeDTO();
@@ -93,6 +106,22 @@ public class ProdutoServiceTest {
         .isNotNull()
         .isInstanceOf(SemEstoqueException.class)
         .hasMessage("Quantidade requerida maior do que tem em estoque");
+
+
+    verify(produtoFeignClient, times(1)).atualizarQuantidade(produtoId, request);
+  }
+
+  @Test
+  void deveLancarSemRunTimeException_QuandoServicoDerErro() {
+    Long produtoId = 1L;
+    AtualizarQuantidadeDTO request = ProdutoUtil.gerarAtualizarQuantidadeDTO();
+
+    when(produtoFeignClient.atualizarQuantidade(produtoId, request))
+        .thenThrow(FeignExceptionUtil.gerarFeignException(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+
+    assertThatThrownBy(() -> produtoService.atualizarQuantidade(produtoId, request))
+        .isNotNull()
+        .isInstanceOf(RuntimeException.class);
 
 
     verify(produtoFeignClient, times(1)).atualizarQuantidade(produtoId, request);
