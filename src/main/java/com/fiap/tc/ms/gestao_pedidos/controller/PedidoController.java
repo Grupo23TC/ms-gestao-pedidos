@@ -56,7 +56,7 @@ public class PedidoController {
   @PutMapping("/atualizar-status/{id}")
   public ResponseEntity<PedidoStatusAtualizadoResponse> atualizarStatusPedido(
       @PathVariable Long id,
-      @RequestBody AtualizarStatusPedidoRequest status
+      @Valid @RequestBody AtualizarStatusPedidoRequest status
   ) {
     return ResponseEntity.ok(pedidoService.atualizarStatusPedido(id, status));
   }
@@ -82,7 +82,7 @@ public class PedidoController {
   @PutMapping("/atualizar-rastreio/{id}")
   public ResponseEntity<PedidoResponse> atualizarRastreioPedido(
       @PathVariable Long id,
-      @RequestBody AtualizarRastreioRequest body
+      @Valid @RequestBody AtualizarRastreioRequest body
   ) {
     PedidoResponse pedidoAtualizado = pedidoService.atualizarRastreio(id, body);
 
